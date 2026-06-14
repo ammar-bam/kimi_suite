@@ -1,0 +1,33 @@
+{
+  "name": "@kimi/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "echo \"No tests yet for @kimi/web\""
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^1.1.9",
+    "@kimi/config": "workspace:*",
+    "@kimi/shared": "workspace:*",
+    "@kimi/ui": "workspace:*",
+    "ai": "^4.1.16",
+    "next": "^15.0.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.16",
+    "typescript": "^5.6.3"
+  }
+}

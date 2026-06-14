@@ -1,0 +1,19 @@
+{
+  "name": "kimi-suite",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "dev:web": "pnpm --filter @kimi/web dev",
+    "dev:worker": "pnpm --filter @kimi/worker dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test"
+  },
+  "devDependencies": {
+    "turbo": "^2.1.4",
+    "typescript": "^5.6.3"
+  }
+}
