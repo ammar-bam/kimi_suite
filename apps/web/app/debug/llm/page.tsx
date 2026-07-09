@@ -16,7 +16,7 @@ export default function LlmDebugPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           messages: [{ role: "user", content: prompt }],
-          model: "moonshot-v1-32k"
+          model: "meta/llama-3.1-70b-instruct"
         })
       });
       const text = await res.text();

@@ -1,4 +1,5 @@
 import { fail, ok } from "../_lib/response";
+import { modelForFeature } from "@kimi/config";
 
 export async function POST(req: Request) {
   const body = (await req.json()) as {
@@ -6,6 +7,7 @@ export async function POST(req: Request) {
     target?: string;
     tone?: string;
     action?: "translate" | "rewrite" | "shorten" | "expand" | "fix-grammar";
+    model?: string;
   };
 
   if (!body.text || !body.target || !body.action) {
@@ -13,6 +15,7 @@ export async function POST(req: Request) {
   }
 
   return ok({
+    model: modelForFeature("translate", body.model),
     result: `[${body.action}/${body.target}${body.tone ? `/${body.tone}` : ""}] ${body.text}`
   });
 }

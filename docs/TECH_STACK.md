@@ -7,13 +7,13 @@ A modern, type-safe, mostly-TypeScript stack chosen for speed of development, lo
 | Layer | Choice | Why |
 |---|---|---|
 | Framework | **Next.js 15** (App Router, React 19) | SSR + RSC + streaming + API routes in one project, perfect for LLM streaming. |
-| Language | **TypeScript (strict)** | Catches issues early, great DX with KIMI’s OpenAI-compatible SDK. |
+| Language | **TypeScript (strict)** | Catches issues early, great DX with OpenAI-compatible SDKs (NVIDIA NIM endpoint). |
 | Styling | **Tailwind CSS v4** | Utility-first, tiny output, themable. |
 | UI kit | **shadcn/ui + Radix Primitives** | Owned components, accessible, easy to theme. |
 | Icons | **lucide-react** | Tree-shakeable. |
 | State | **Zustand** (client) + **TanStack Query** (server data) | Minimal boilerplate; great cache for chat history. |
 | Forms | **react-hook-form + Zod** | Same Zod schemas reused on the server. |
-| Streaming UI | **Vercel AI SDK (`ai` package)** | Works with any OpenAI-compatible endpoint → fits KIMI directly. |
+| Streaming UI | **Vercel AI SDK (`ai` package)** | Works with any OpenAI-compatible endpoint → fits NVIDIA NIM directly. |
 | Editor (code module) | **Monaco** | Same engine as VS Code. |
 | Slide preview | **Reveal.js** (in iframe) | Renders the JSON deck before export. |
 | Charts | **Recharts** | For usage dashboard. |
@@ -25,7 +25,7 @@ A modern, type-safe, mostly-TypeScript stack chosen for speed of development, lo
 |---|---|---|
 | Runtime | **Node.js 20 LTS** | Native fetch, stable. |
 | API | **Next.js Route Handlers** (Edge where possible) | Co-located with UI; Edge runtime gives low TTFB for streams. |
-| LLM client | **OpenAI SDK** pointed at `https://api.moonshot.ai/v1` | KIMI is OpenAI-compatible → zero custom code. |
+| LLM client | **OpenAI SDK** pointed at `https://integrate.api.nvidia.com/v1` | NVIDIA NIM is OpenAI-compatible; model can vary by feature. |
 | Background jobs | **BullMQ** on Redis | For PPTX rendering, long TTS jobs, embeddings. |
 | Worker host | **Railway** or **Fly.io** | Long-running processes outside serverless. |
 | ORM | **Drizzle ORM** | Type-safe, lightweight, SQL-first. |
@@ -53,8 +53,8 @@ A modern, type-safe, mostly-TypeScript stack chosen for speed of development, lo
 
 | Capability | Provider | Notes |
 |---|---|---|
-| LLM (chat, summarize, translate, slides JSON, code) | **KIMI / Moonshot** (`moonshot-v1-8k`, `moonshot-v1-32k`, `moonshot-v1-128k`, `kimi-k2`) | OpenAI-compatible. |
-| Text-to-Speech | **ElevenLabs** (high quality) or **Azure Speech** (cheaper) | KIMI does not offer TTS. |
+| LLM (chat, summarize, translate, slides JSON, code) | **NVIDIA NIM endpoint** (`integrate.api.nvidia.com/v1`) | OpenAI-compatible; route model per module via env (`MODEL_CHAT`, `MODEL_CODE`, etc). |
+| Text-to-Speech | **ElevenLabs** (high quality) or **Azure Speech** (cheaper) | Independent from primary LLM provider. |
 | Speech-to-Text (optional) | **Whisper** via Groq or OpenAI | For voice input. |
 | Embeddings | **bge-m3** via a small self-hosted endpoint *or* **Voyage AI** | KIMI does not (yet) expose embeddings publicly. |
 | PPTX export | **PptxGenJS** (pure JS, runs in worker) | No external service. |
@@ -85,7 +85,7 @@ A modern, type-safe, mostly-TypeScript stack chosen for speed of development, lo
        │             │  Cloudflare R2  │   pptx / mp3 / uploads
        │             └─────────────────┘
        │             ┌─────────────────┐
-       └────────────►│  KIMI / Moonshot│   LLM
+       └────────────►│  NVIDIA NIM     │   LLM
                      │  ElevenLabs     │   TTS
                      └─────────────────┘
 
@@ -98,7 +98,7 @@ A modern, type-safe, mostly-TypeScript stack chosen for speed of development, lo
 
 | Alt | Why rejected |
 |---|---|
-| Python FastAPI backend | Adds a second runtime; KIMI SDK works fine in Node; Vercel AI SDK is JS-first. |
+| Python FastAPI backend | Adds a second runtime; OpenAI-compatible SDK works fine in Node; Vercel AI SDK is JS-first. |
 | Remix / SvelteKit | Smaller ecosystem for AI streaming today. |
 | Firebase | Vendor lock-in, weaker SQL/vector story than Postgres+pgvector. |
 | MongoDB | Relational data (orgs, users, jobs, files, history) is a better Postgres fit. |

@@ -1,8 +1,8 @@
-# API — Internal Endpoints & KIMI Integration
+# API — Internal Endpoints & LLM Integration
 
-## 1. KIMI / Moonshot Integration
+## 1. NVIDIA NIM Integration (OpenAI-compatible)
 
-KIMI exposes an **OpenAI-compatible** REST API, so the official `openai` Node SDK works directly.
+NVIDIA NIM exposes an **OpenAI-compatible** REST API, so the official `openai` Node SDK works directly.
 
 ### Base configuration
 
@@ -12,21 +12,27 @@ import OpenAI from 'openai';
 import { env } from '@kimi/config';
 
 export const kimi = new OpenAI({
-  apiKey:  env.KIMI_API_KEY,
-  baseURL: 'https://api.moonshot.ai/v1', // or https://api.moonshot.cn/v1 for China
+  apiKey: env.LLM_API_KEY,
+  baseURL: env.LLM_BASE_URL, // default: https://integrate.api.nvidia.com/v1
   timeout: 60_000,
   maxRetries: 2,
 });
 ```
 
-### Available models (as of writing — verify in KIMI dashboard before launch)
+### Per-feature model routing
 
-| Model id | Context | Best for |
-|---|---|---|
-| `moonshot-v1-8k`   | 8 k    | Short prompts, translation, quick chat |
-| `moonshot-v1-32k`  | 32 k   | Slides, code, medium documents |
-| `moonshot-v1-128k` | 128 k  | Long-document summarization & RAG fallback |
-| `kimi-k2-…`        | varies | Newer general model — use when GA |
+Configure default models per module in environment variables:
+
+| Env var | Module |
+|---|---|
+| `MODEL_CHAT` | Chat Workspace |
+| `MODEL_SUMMARIZE` | Document Summarizer |
+| `MODEL_TRANSLATE` | Translator + Rewriter |
+| `MODEL_SLIDES` | AI Slide Creator |
+| `MODEL_SPEECH_SCRIPT` | Speech script generation |
+| `MODEL_CODE` | Code Assistant |
+
+Routes also accept an optional `model` override in request bodies when you want request-level model switching.
 
 ### Wrapper with usage logging
 
@@ -53,14 +59,14 @@ import { streamText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 
 const kimiProvider = createOpenAI({
-  apiKey: process.env.KIMI_API_KEY,
-  baseURL: 'https://api.moonshot.ai/v1',
+  apiKey: process.env.LLM_API_KEY,
+  baseURL: process.env.LLM_BASE_URL,
 });
 
 export async function POST(req: Request) {
-  const { messages, model = 'moonshot-v1-32k' } = await req.json();
+  const { messages, model } = await req.json();
   const result = await streamText({
-    model: kimiProvider(model),
+    model: kimiProvider(model ?? process.env.MODEL_CHAT!),
     messages,
     onFinish: ({ usage }) => recordUsage(/* … */),
   });
@@ -72,7 +78,7 @@ export async function POST(req: Request) {
 
 ```ts
 const completion = await kimi.chat.completions.create({
-  model: 'moonshot-v1-32k',
+  model: process.env.MODEL_SLIDES!,
   response_format: { type: 'json_object' },
   messages: [
     { role: 'system', content: SLIDE_SYSTEM_PROMPT }, // describes the schema
@@ -96,13 +102,13 @@ All routes live under `/api/*`. Auth via session cookie (Clerk) — middleware i
 | POST | `/api/conversations`           | `{ title? }`                            | `Conversation`                      |   |
 | DELETE | `/api/conversations/:id`     | —                                       | `204`                               |   |
 | POST | `/api/summarize/upload`        | multipart `file`                        | `{ documentId }`                    |   |
-| POST | `/api/summarize/:docId/ask`    | `{ question }`                          | SSE answer + `citations[]`          | ✅ |
-| POST | `/api/translate`               | `{ text, target, tone?, action }`       | `{ result }`                        |   |
-| POST | `/api/code/:action`            | `{ code, language, instruction? }`      | `{ result, diff? }`                 |   |
-| POST | `/api/slides`                  | `{ topic, slides, template, language }` | `{ jobId }`                         |   |
+| POST | `/api/summarize/:docId/ask`    | `{ question, model? }`                  | SSE answer + `citations[]`          | ✅ |
+| POST | `/api/translate`               | `{ text, target, tone?, action, model? }` | `{ result }`                      |   |
+| POST | `/api/code/:action`            | `{ code, language, instruction?, model? }` | `{ result, diff? }`               |   |
+| POST | `/api/slides`                  | `{ topic, slides, template, language, model? }` | `{ jobId }`                  |   |
 | GET  | `/api/jobs/:id`                | —                                       | `Job`                               |   |
 | GET  | `/api/jobs/:id/stream`         | —                                       | SSE progress events                 | ✅ |
-| POST | `/api/speech/script`           | `{ topic, style, language }`            | SSE script                          | ✅ |
+| POST | `/api/speech/script`           | `{ topic, style, language, model? }`    | SSE script                          | ✅ |
 | POST | `/api/speech/synthesize`       | `{ script, voiceId, format }`           | `{ jobId }`                         |   |
 | GET  | `/api/usage`                   | —                                       | `{ today, month, byModule }`        |   |
 | POST | `/api/billing/checkout`        | `{ priceId }`                           | `{ url }`                           |   |
@@ -137,7 +143,7 @@ data: {"jobId":"abc","message":"…"}
 | `RATE_LIMITED`   | 429 | User or IP quota hit |
 | `QUOTA_EXCEEDED` | 402 | Monthly LLM/TTS quota hit |
 | `BAD_INPUT`      | 400 | Zod validation failed |
-| `UPSTREAM`       | 502 | KIMI / TTS provider error |
+| `UPSTREAM`       | 502 | NVIDIA / TTS provider error |
 | `INTERNAL`       | 500 | Unhandled |
 
 ---

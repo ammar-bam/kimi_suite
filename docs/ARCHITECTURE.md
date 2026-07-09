@@ -37,9 +37,9 @@
    │  uploads / outputs       │
    └──────────────────────────┘
 
-   ┌─────────────────────────────────────────────┐
-   │ External AI: KIMI · ElevenLabs · Whisper    │
-   └─────────────────────────────────────────────┘
+       ┌─────────────────────────────────────────────┐
+       │ External AI: NVIDIA NIM · ElevenLabs · Whisper │
+       └─────────────────────────────────────────────┘
 ```
 
 ## 2. Repository Layout (Turborepo)
@@ -68,7 +68,7 @@ KimiAI_Suite/
 │        └─ embed.ts
 ├─ packages/
 │  ├─ ui/                   # shadcn re-exports + custom components
-│  ├─ llm/                  # KIMI client, prompt templates, schemas
+│  ├─ llm/                  # LLM client, prompt templates, schemas
 │  ├─ db/                   # Drizzle schema + migrations
 │  ├─ config/               # env loader (Zod-validated)
 │  └─ shared/               # zod types reused by web + worker
@@ -113,7 +113,7 @@ export const modules = [
 
 ### 4a. Streaming chat (fast path, no queue)
 1. Client `POST /api/chat` (SSE).
-2. Edge handler authenticates → rate-limits → calls KIMI with `stream: true`.
+2. Edge handler authenticates → rate-limits → resolves `MODEL_CHAT` (or request override) and calls NVIDIA endpoint with `stream: true`.
 3. Tokens piped back through Vercel AI SDK `streamText`.
 4. On `onFinish`, server action persists the message pair + token cost.
 
@@ -122,26 +122,26 @@ export const modules = [
 2. Node handler validates → enqueues `render-pptx` job → returns `jobId`.
 3. Client subscribes to `GET /api/jobs/:id/stream` (SSE progress).
 4. Worker:
-   - calls KIMI with a JSON-schema response format → deck JSON,
+       - calls NVIDIA endpoint with `MODEL_SLIDES` and JSON-schema response format → deck JSON,
    - renders via PptxGenJS,
    - uploads to R2,
    - updates job row.
 5. Client downloads from signed URL.
 
 ### 4c. Speech generation
-1. KIMI generates / cleans the script (streaming preview to UI).
+1. NVIDIA endpoint generates / cleans the script with `MODEL_SPEECH_SCRIPT` (streaming preview to UI).
 2. On user confirm → enqueue `tts` job.
 3. Worker chunks text, calls ElevenLabs per chunk, concatenates with ffmpeg, uploads MP3.
 
 ### 4d. Document summarizer (RAG)
 1. Upload → R2 → enqueue `embed` job.
 2. Worker extracts text, chunks 800 tokens, embeds, stores in `pgvector`.
-3. User asks question → top-k retrieval → KIMI 128k prompt with citations.
+3. User asks question → top-k retrieval → `MODEL_SUMMARIZE` prompt with citations.
 
 ## 5. Cross-Cutting Concerns
 
 - **Auth context** propagated via Next middleware → injected into every server action.
-- **Tracing**: each request gets a `traceId`; passed as header to KIMI for log correlation.
+- **Tracing**: each request gets a `traceId`; passed as header to the LLM provider for log correlation.
 - **Cost meter**: a single helper `recordUsage(userId, model, in, out)` writes to `usage_events` and updates a Redis counter for quota.
 - **Idempotency**: mutating routes accept `Idempotency-Key` header.
 - **Caching**: prompt+model+input hash → Redis (TTL 24 h) for deterministic calls (translate, summarize).
@@ -150,7 +150,7 @@ export const modules = [
 
 | Failure | Behavior |
 |---|---|
-| KIMI 429 | Exponential backoff, max 3 retries, then return 503 with `retry-after`. |
+| LLM 429 | Exponential backoff, max 3 retries, then return 503 with `retry-after`. |
 | Job worker crash | BullMQ retries (max 2) with backoff; dead-letter queue alerted via Sentry. |
 | Upload too large | Reject at edge (>25 MB) with friendly error. |
 | Stream client disconnect | `AbortController` cancels KIMI request → saves cost. |

@@ -1,10 +1,10 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { streamText } from "ai";
-import { env } from "@kimi/config";
+import { env, modelForFeature } from "@kimi/config";
 
 const kimiProvider = createOpenAI({
-  apiKey: env.KIMI_API_KEY,
-  baseURL: env.KIMI_BASE_URL
+  apiKey: env.LLM_API_KEY,
+  baseURL: env.LLM_BASE_URL
 });
 
 export async function POST(req: Request) {
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   };
 
   const result = await streamText({
-    model: kimiProvider(body.model ?? env.KIMI_DEFAULT_MODEL),
+    model: kimiProvider(modelForFeature("chat", body.model)),
     messages: body.messages,
     onFinish: async () => {
       // TODO: persist messages and usage events in DB.
