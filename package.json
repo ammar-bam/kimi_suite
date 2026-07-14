@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "dev": "turbo run dev --parallel",
+    "dev": "pnpm -r --parallel --filter \"@kimi/web\" --filter \"@kimi/worker\" run dev",
+    "dev:turbo": "turbo run dev",
     "dev:web": "pnpm --filter @kimi/web dev",
     "dev:worker": "pnpm --filter @kimi/worker dev",
     "build": "turbo run build",
@@ -13,7 +14,8 @@
     "test": "turbo run test"
   },
   "devDependencies": {
-    "turbo": "^2.1.4",
+    "pnpm": "^9.15.0",
+    "turbo": "^2.10.5",
     "typescript": "^5.6.3"
   }
 }

@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { modules } from "@kimi/shared";
+import { BackButton } from "../_components/back-button";
 
 export default function DashboardPage() {
   return (
     <main className="mx-auto min-h-screen w-full max-w-6xl p-6 md:p-10">
-      <h1 className="text-3xl font-bold">Modules</h1>
+      <BackButton href="/" label="Back to home" />
+      <h1 className="mt-4 text-3xl font-bold">Modules</h1>
       <p className="mt-2 text-slate-700">Each module follows the same plug-in structure and can ship independently.</p>
       <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {modules.map((module) => (

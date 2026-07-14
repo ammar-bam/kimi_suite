@@ -1,7 +1,10 @@
+import { BackButton } from "../../_components/back-button";
+
 export default function SpeechModulePage() {
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl p-6 md:p-10">
-      <h1 className="text-3xl font-bold">Speech Generator</h1>
+      <BackButton href="/dashboard" label="Back to modules" />
+      <h1 className="mt-4 text-3xl font-bold">Speech Generator</h1>
       <p className="mt-2 text-slate-700">Generate script drafts and synthesize them into downloadable audio.</p>
     </main>
   );

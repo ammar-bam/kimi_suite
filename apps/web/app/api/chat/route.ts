@@ -1,25 +1,36 @@
-import { createOpenAI } from "@ai-sdk/openai";
-import { streamText } from "ai";
-import { env, modelForFeature } from "@kimi/config";
+import { NextRequest, NextResponse } from "next/server";
+const api_key = process.env.LLM_API_KEY;
+export async function POST(req: NextRequest) {
+  try {
+    const { messages } = await req.json();
 
-const kimiProvider = createOpenAI({
-  apiKey: env.LLM_API_KEY,
-  baseURL: env.LLM_BASE_URL
-});
+    const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${api_key}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({
+        model: "minimaxai/minimax-m3",
+        messages,
+        max_tokens: 8192,
+        temperature: 1.0,
+        top_p: 0.95,
+        stream: false
+      })
+    });
 
-export async function POST(req: Request) {
-  const body = (await req.json()) as {
-    messages: Array<{ role: "user" | "assistant" | "system"; content: string }>;
-    model?: string;
-  };
-
-  const result = await streamText({
-    model: kimiProvider(modelForFeature("chat", body.model)),
-    messages: body.messages,
-    onFinish: async () => {
-      // TODO: persist messages and usage events in DB.
+    if (!response.ok) {
+      const errText = await response.text();
+      return NextResponse.json({ error: errText }, { status: response.status });
     }
-  });
 
-  return result.toDataStreamResponse();
+    const data = await response.json();
+    const text = data.choices?.[0]?.message?.content ?? "";
+
+    return NextResponse.json({ text });
+  } catch (error) {
+    return NextResponse.json({ error: String(error) }, { status: 500 });
+  }
 }
