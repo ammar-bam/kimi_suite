@@ -31,7 +31,7 @@ export default function LlmDebugPage() {
   }
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-3xl p-6 md:p-10">
+    <main className="mx-auto min-h-[calc(100vh-4rem)] w-full max-w-3xl p-6 md:p-10 pt-4">
       <BackButton href="/" label="Back to home" />
       <h1 className="mt-4 text-2xl font-bold">KIMI Debug Page</h1>
       <textarea

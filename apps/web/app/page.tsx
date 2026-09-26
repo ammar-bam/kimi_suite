@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function HomePage() {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col p-6 md:p-10">
+    <main className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-5xl flex-col p-6 md:p-10 pt-4">
       <div className="rounded-2xl border border-black/10 bg-white/85 p-8 shadow-sm backdrop-blur">
         <p className="text-sm font-semibold uppercase tracking-wide text-brand">KimiAI Suite</p>
         <h1 className="mt-3 text-4xl font-bold leading-tight">One workspace for every AI productivity flow.</h1>
