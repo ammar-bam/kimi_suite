@@ -13,9 +13,11 @@
   "dependencies": {
     "@ai-sdk/openai": "^1.1.9",
     "@kimi/config": "workspace:*",
+    "@kimi/db": "workspace:*",
     "@kimi/shared": "workspace:*",
     "@kimi/ui": "workspace:*",
     "ai": "^4.1.16",
+    "drizzle-orm": "^0.38.0",
     "next": "^15.0.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

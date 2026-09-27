@@ -27,6 +27,9 @@
       ],
       "@kimi/config": [
         "../../packages/config/src/index.ts"
+      ],
+      "@kimi/db": [
+        "../../packages/db/src/index.ts"
       ]
     },
     "allowJs": true,
