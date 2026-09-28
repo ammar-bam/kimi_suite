@@ -1,20 +1,23 @@
-import { useState } from "react";
+"use client";
+
+import React from "react";
+
+type FallbackProps = { error: Error; resetError: () => void };
 
 type ErrorBoundaryProps = {
   children: React.ReactNode;
-  fallback?: React.ComponentType<{ error: Error; resetError: () => void }>;
+  fallback?: React.ComponentType<FallbackProps>;
 };
 
-export class ErrorBoundary extends React.Component<
-  { fallback?: React.ComponentType<{ error: Error; resetError: () => void }> },
-  { hasError: boolean; error: Error | null }
-> {
+type ErrorBoundaryState = { hasError: boolean; error: Error | null };
+
+export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(error: Error) {
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
 
@@ -27,7 +30,7 @@ export class ErrorBoundary extends React.Component<
   };
 
   render() {
-    if (this.state.hasError && this.props.fallback) {
+    if (this.state.hasError && this.state.error && this.props.fallback) {
       const FallbackComponent = this.props.fallback;
       return <FallbackComponent error={this.state.error} resetError={this.resetError} />;
     }
@@ -36,7 +39,7 @@ export class ErrorBoundary extends React.Component<
   }
 }
 
-export function ErrorFallback({ error, resetError }: { error: Error; resetError: () => void }) {
+export function ErrorFallback({ error, resetError }: FallbackProps) {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur flex items-center justify-center z-50">
       <div className="bg-white/90 backdrop-blur-md rounded-2xl p-8 max-w-xl w-full border border-black/10 text-center">

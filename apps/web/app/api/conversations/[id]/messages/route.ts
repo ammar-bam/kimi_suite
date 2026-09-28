@@ -1,7 +1,7 @@
 import { ok } from "../../../_lib/response";
 import { drizzle } from "@/lib/db";
 import { messages } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -14,10 +14,11 @@ export async function GET(_: Request, { params }: Params) {
       .select()
       .from(messages)
       .where(eq(messages.convId, id))
-      .orderBy(messages.createdAt.asc());
+      .orderBy(asc(messages.createdAt));
 
     return ok(conversationMessages);
   } catch (error) {
-    return ok([]); // Fallback to empty array
+    console.error("GET /api/conversations/[id]/messages failed:", error);
+    return ok([]);
   }
 }

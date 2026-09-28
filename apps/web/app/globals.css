@@ -46,3 +46,18 @@ body {
 .fade-out-3000 {
   animation: fade-out 0.3s ease-out 3000ms forwards;
 }
+
+/* Tighten markdown spacing when rendered inside a chat bubble. */
+.chat-markdown > *:first-child {
+  margin-top: 0;
+}
+.chat-markdown > *:last-child {
+  margin-bottom: 0;
+}
+.chat-markdown p {
+  margin: 0.35rem 0;
+}
+.chat-markdown ul,
+.chat-markdown ol {
+  margin: 0.35rem 0;
+}

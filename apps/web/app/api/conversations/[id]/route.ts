@@ -1,11 +1,11 @@
-import { ok } from "../../../_lib/response";
+import { ok, fail } from "../../_lib/response";
 import { drizzle } from "@/lib/db";
 import { conversations, messages } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function GET_REQUEST(request: Request, { params }: Params) {
+export async function GET(_request: Request, { params }: Params) {
   try {
     const { id } = await params;
     const db = drizzle();
@@ -16,78 +16,57 @@ export async function GET_REQUEST(request: Request, { params }: Params) {
       .where(eq(conversations.id, id));
 
     if (!conversation) {
-      return new Response(JSON.stringify({ ok: false, error: "Conversation not found" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json" }
-      });
+      return fail("BAD_INPUT", "Conversation not found", { status: 404 });
     }
-
     return ok(conversation);
   } catch (error) {
-    return new Response(JSON.stringify({ ok: false, error: "Failed to fetch conversation" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
-    });
+    console.error("GET /api/conversations/[id] failed:", error);
+    return fail("INTERNAL", "Failed to fetch conversation", { status: 500 });
   }
 }
 
-export async function PATCH_REQUEST(request: Request, { params }: Params) {
+export async function PATCH(request: Request, { params }: Params) {
   try {
     const { id } = await params;
-    const body = (await req.json()) as { title?: string };
+    const body = (await request.json().catch(() => ({}))) as { title?: string };
     const db = drizzle();
 
-    const [updatedConversation] = await db
+    const [updated] = await db
       .update(conversations)
       .set({
         title: body.title,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date()
       })
       .where(eq(conversations.id, id))
       .returning();
 
-    if (!updatedConversation) {
-      return new Response(JSON.stringify({ ok: false, error: "Conversation not found" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json" }
-      });
+    if (!updated) {
+      return fail("BAD_INPUT", "Conversation not found", { status: 404 });
     }
-
-    return ok(updatedConversation);
+    return ok(updated);
   } catch (error) {
-    return new Response(JSON.stringify({ ok: false, error: "Failed to update conversation" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
-    });
+    console.error("PATCH /api/conversations/[id] failed:", error);
+    return fail("INTERNAL", "Failed to update conversation", { status: 500 });
   }
 }
 
-export async function DELETE_REQUEST(request: Request, { params }: Params) {
+export async function DELETE(_request: Request, { params }: Params) {
   try {
     const { id } = await params;
     const db = drizzle();
 
-    // Delete associated messages first (due to foreign key constraint)
     await db.delete(messages).where(eq(messages.convId, id));
-
-    // Delete the conversation
-    const [deletedConversation] = await db
+    const [deleted] = await db
       .delete(conversations)
       .where(eq(conversations.id, id))
       .returning();
 
-    if (!deletedConversation) {
-      return new Response(JSON.stringify({ ok: false, error: "Conversation not found" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json" }
-      });
+    if (!deleted) {
+      return fail("BAD_INPUT", "Conversation not found", { status: 404 });
     }
-
     return ok({ deleted: true, id });
   } catch (error) {
-    return new Response(JSON.stringify({ ok: false, error: "Failed to delete conversation" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
-    });
+    console.error("DELETE /api/conversations/[id] failed:", error);
+    return fail("INTERNAL", "Failed to delete conversation", { status: 500 });
   }
 }
